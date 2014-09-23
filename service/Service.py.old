@@ -1,0 +1,61 @@
+import os
+import time
+import logging
+
+import bottle
+from bottle import request
+import json
+from urllib import urlopen,quote
+import q2c
+
+TAXONOMY_URL = os.getenv('TAXONOMY_URL')
+SOLR_URL_PREFIX = os.getenv('SOLR_URL')
+
+app = bottle.Bottle()
+
+@app.route('/api/status')
+def status():
+    return {'status': 'online', 'servertime': time.time()}
+
+
+@app.route('/api/echo/<text>')
+def echo(text):
+    return text
+
+@app.route('/api/search2')
+def search2():
+    query = request.query['q']
+    quoted_query = quote(query)
+    taxres = urlopen(TAXONOMY_URL + '?doc=' + quoted_query)
+    category = json.loads(taxres.read())['category']
+    catsplit = category.split('>')
+    c0 = catsplit[0].strip()
+    cl = catsplit[-1].strip()
+    solr_params = dict((k,request.query[k]) for k in request.query.keys())
+    solr_params.update({'q':'{!q.op=AND df=product_title_ws_lower}' + query,
+                   'fq':'c0:\"%s\" AND cl:\"%s\"'%(c0,cl),
+                   'wt':'json',
+                   'indent':'true'})
+    solr_url = SOLR_URL_PREFIX + '&'.join(['%s=%s'%(key,value) for (key,value) in solr_params.items()])
+    print solr_url
+    solr_res = urlopen(solr_url)
+    return solr_res
+
+@app.route('/api/search')
+def search():
+    solr_params = dict((k,request.query[k]) for k in request.query.keys())
+    query = request.query['q']
+    if(query!=None):
+        solr_params.update({'q':'{!df=product_title_en_splitting_tight}' + query})
+        category = q2c.lookup(query)
+        if(category!=None):
+            #solr_params.update({'fq':'raw_catpred:\"%s\" AND store:\"24\"'%(category)})
+	    catsplit = category.split('>')
+	    c0 = catsplit[0].strip()
+	    cl = catsplit[-1].strip()
+            solr_params.update({'fq':'c0:\"%s\" AND cl:\"%s\"'%(c0,cl)})
+    solr_params.update({'wt':'json', 'indent':'true'})
+    solr_url = SOLR_URL_PREFIX + '&'.join(['%s=%s'%(key,quote(value)) for (key,value) in solr_params.items()])
+    print solr_url
+    solr_res = urlopen(solr_url)
+    return solr_res
