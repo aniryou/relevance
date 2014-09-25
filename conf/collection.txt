@@ -1,0 +1,4 @@
+relevance1
+5
+1
+id,imageurl,product_title,c0,cl,raw_catpred,sku,store_id

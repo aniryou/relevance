@@ -1,0 +1,5 @@
+solr01.perf.indix.tv
+solr02.perf.indix.tv
+solr03.perf.indix.tv
+solr04.perf.indix.tv
+solr05.perf.indix.tv

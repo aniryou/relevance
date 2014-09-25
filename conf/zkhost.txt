@@ -1,0 +1,1 @@
+solr-zk01.perf.indix.tv:2181,solr-zk02.perf.indix.tv:2181
