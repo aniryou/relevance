@@ -14,7 +14,7 @@ BASE_DIR='/data1/whoosh/index'
 PRODUCT_TITLE='title'
 PRODUCT_CATEGORY='catpred'
 
-storage = FileStorage(BASE_DIR+"/ix2")
+storage = FileStorage(BASE_DIR+"/ix")
 ix = storage.open_index()
 
 
@@ -30,31 +30,37 @@ pattern_kvp=re.compile(p_kvp)
 pattern_kvps_anded=re.compile(p_kvps_anded)
 def parseFQ(s, valid_keys):
 	and_match = pattern_kvps_anded.match(s)
+	exprs_ = [s]
 	if and_match!=None:
 		anded_values = and_match.group(0)
-		exprs = [parseFQ(match[0], valid_keys) for match in pattern_kvp.findall(anded_values)]
-		return And([expr for expr in  exprs if expr!=None])
-	kvp_match = pattern_kvp.match(s)
-	try:
-		kvp = kvp_match.group(0)
-		key = pattern_key.match(kvp).group(0)
-		if(key in valid_keys):
-			voffset = len(key)+1
-			ored_values_match = pattern_vals_ored.match(s[voffset:])
-			if ored_values_match!=None:
-				ored_values = ored_values_match.group(0)
-				values = [v for v in pattern_val.findall(ored_values) if v!='OR']
-				values = [v[1:-1] for v in values if (v[0]=='"' and v[-1]=='"')]
-				return Or([Term(key, value) for value in values])
-			else:
-				value = pattern_val.match(s[voffset:]).group(0)
-				if value[0]=='"' and value[-1]=='"':
-					value = value[1:-1]
-				return Term(key,value)
-	except Exception, e:
-		sys.stderr.write('Error parsing %s, Exception: %s'%(s,str(e)))
-		raise Exception('Error Parsing FQ')
-	
+		exprs_ = [match[0] for match in pattern_kvp.findall(anded_values)]
+	exprs = []
+	for expr_ in exprs_:
+		expr = None
+		kvp_match = pattern_kvp.match(expr_)
+		try:
+			kvp = kvp_match.group(0)
+			key = pattern_key.match(kvp).group(0)
+			if(key in valid_keys):
+				voffset = len(key)+1
+				ored_values_match = pattern_vals_ored.match(s[voffset:])
+				if ored_values_match!=None:
+					ored_values = ored_values_match.group(0)
+					values = [v for v in pattern_val.findall(ored_values) if v!='OR']
+					values = [v[1:-1] for v in values if (v[0]=='"' and v[-1]=='"')]
+					expr = Or([Term(key, value) for value in values])
+				else:
+					value = pattern_val.match(kvp[voffset:]).group(0)
+					print key, value
+					if value[0]=='"' and value[-1]=='"':
+						value = value[1:-1]
+					expr = Term(key,value)
+		except Exception, e:
+			sys.stderr.write('Error parsing %s, Exception: %s'%(s,str(e)))
+			raise Exception('Error Parsing FQ')
+		if expr!=None: exprs.append(expr)
+	return And(exprs) if len(exprs)>0 else None
+
 def to_solr_format(res, start):
 	solr_res={'responseHeader':{}}
 	solr_res['responseHeader'].update({'QTime':'0.0'})
@@ -81,9 +87,11 @@ def search(params):
 	titleparse = QueryParser(PRODUCT_TITLE, schema=ix.schema)
 	with ix.searcher() as s:
 		q=[]
+		print "Parsing q:%s"%q_
 		if q_!='*':
 			titleq=titleparse.parse(q_)
 			q.append(titleq)
+		print "Parsing fq:%s"%fq
 		if fq!='*':
 			filterq=parseFQ(fq, ix.schema.names())
 			print str(filterq)
