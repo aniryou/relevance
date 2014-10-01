@@ -3,3 +3,8 @@ solr02.perf.indix.tv
 solr03.perf.indix.tv
 solr04.perf.indix.tv
 solr05.perf.indix.tv
+solr06.perf.indix.tv
+solr07.perf.indix.tv
+solr08.perf.indix.tv
+solr09.perf.indix.tv
+solr10.perf.indix.tv

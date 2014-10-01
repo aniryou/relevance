@@ -22,7 +22,7 @@ cp ../conf/$COLLECTION/* $TEMP
 
 for solr_host in $SOLR_HOSTS
 do
-	ssh -oStrictHostKeyChecking=no $solr_host "/etc/init.d/solr restart"
+#	ssh -oStrictHostKeyChecking=no $solr_host "/etc/init.d/solr restart"
 done
 
 solr_host1=$(echo $SOLR_HOSTS | tr ' ' '\n' | head -1)

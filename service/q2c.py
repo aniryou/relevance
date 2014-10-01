@@ -4,7 +4,9 @@ from collections import Counter
 from itertools import chain
 import pickle
 
-dict = pickle.load(file("Q2C_Dict_all.pickle","r"))
+Q2C_DICT="Q2C_Dict_amazon.pickle"
+
+dict = pickle.load(file(Q2C_DICT,"rb"))
 keys = dict.keys()
 
 def fuzzylookup(q,threshold=.6):
