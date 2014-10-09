@@ -14,7 +14,7 @@ BASE_DIR='/data1/whoosh/index'
 PRODUCT_TITLE='title'
 PRODUCT_CATEGORY='catpred'
 
-storage = FileStorage(BASE_DIR+"/ix")
+storage = FileStorage(BASE_DIR+"/ix2")
 ix = storage.open_index()
 
 
@@ -51,7 +51,7 @@ def parseFQ(s, valid_keys):
 					expr = Or([Term(key, value) for value in values])
 				else:
 					value = pattern_val.match(kvp[voffset:]).group(0)
-					print key, value
+					#print key, value
 					if value[0]=='"' and value[-1]=='"':
 						value = value[1:-1]
 					expr = Term(key,value)
@@ -63,11 +63,11 @@ def parseFQ(s, valid_keys):
 
 def to_solr_format(res, start):
 	solr_res={'responseHeader':{}}
-	solr_res['responseHeader'].update({'QTime':'0.0'})
+	solr_res['responseHeader'].update({'QTime':0.0})
 	solr_res.update({'response':{}})
 	solr_res['response'].update({'numFound':0})
 	solr_res['response'].update({'start':start})
-	solr_res['response'].update({'maxScore':'0.0'})
+	solr_res['response'].update({'maxScore':0.0})
 	solr_res['response'].update({'docs':[]})
 	for r in res:
 		solr_res['response']['docs'].append({
@@ -82,21 +82,21 @@ def to_solr_format(res, start):
 def search(params):
 	q_=params.get('q','*')
 	fq=params.get('fq','*')
-	start=int(params.get('start',0))
-	rows=int(params.get('rows',20))
+	start=int(params.get('start','0'))
+	rows=int(params.get('rows','20'))
 	titleparse = QueryParser(PRODUCT_TITLE, schema=ix.schema)
 	with ix.searcher() as s:
 		q=[]
-		print "Parsing q:%s"%q_
+		#print "Parsing q:%s"%q_
 		if q_!='*':
 			titleq=titleparse.parse(q_)
 			q.append(titleq)
-		print "Parsing fq:%s"%fq
+		#print "Parsing fq:%s"%fq
 		if fq!='*':
 			filterq=parseFQ(fq, ix.schema.names())
-			print str(filterq)
+			#print str(filterq)
 			if filterq!=None: q.append(filterq)
-		print "Whoosh query: %s"%str(q)
+		#print "Whoosh query: %s"%str(q)
 		results = s.search_page(And(q), start+1, pagelen=rows)
 		return to_solr_format(results, 0)
 
@@ -105,4 +105,4 @@ if __name__ == "__main__":
 	if len(sys.argv)>2:
 		print str(search({'q':sys.argv[1],'fq':sys.argv[2]}))
 	else:
-		print str(search({'q':sys.argv[1]}))
+		print str(search({'fq':sys.argv[1]}))
