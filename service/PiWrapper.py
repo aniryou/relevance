@@ -32,8 +32,9 @@ def map_params(params):
 	q = params.get('q','')
 	fqdict = {}
 	if(params.has_key('fq')):
-		kvps = params['fq'].split('AND')
+		kvps = params['fq'].replace(' AND ','/').split('/')
 		for kvp in kvps:
+			print kvp
 			tokens = kvp.strip().split(':')
 			key = tokens[0]
 			value = tokens[1]
@@ -61,7 +62,8 @@ def search(params):
 	return res_json
 
 if __name__=='__main__':
-	print search({'q':'iphone'})
-	print search({'fq':'sku:B00EGJ0WUO'})
-	print search({'q':'iphone','fq':'store:(24 OR 270)'})
-	print search({'q':'iphone','fq':'store:"24"'})
+	#print search({'q':'iphone'})
+	#print search({'fq':'sku:B00EGJ0WUO'})
+	#print search({'q':'iphone','fq':'store:(24 OR 270)'})
+	#print search({'q':'iphone','fq':'store:"24"'})
+	print search({'fq':'store:(24 OR 270) AND sku:B0027AANDA','wt':'json','fl':'sku'})

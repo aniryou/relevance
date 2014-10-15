@@ -8,7 +8,9 @@ import json
 from urllib import urlopen,quote
 import CategoryWrapper as cw
 #import SolrWrapper as sw
-import WhooshWrapper as sw
+#import WhooshWrapper as sw
+#import PiWrapper as sw
+import PiWhooshCombinedWrapper as sw
 
 app = bottle.Bottle()
 
